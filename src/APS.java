@@ -103,7 +103,7 @@ public class APS {
 		for(int k = 0;k < planes;k++) {
 			for(int i = 0; i < satPerPlane;i++) {
 				oBs.add(new OrbitalBody("Sat" + i, 1, 10, oBs.get(0),
-						0, 5000000,
+						0, 6000000,
 						40, k*(360/planes) + 10,
 						0, planeDiv*i + (planeDiv/planes) * k,
 						new Color(255, 0, 255)));
