@@ -198,10 +198,10 @@ public class APS {
 	
 	private static void calcLOS() {
 		ArrayList<drawable> objects = new ArrayList<drawable>();
-		//visible  = addLOS(new Base(90,0),objects);
-		//visible2 = addLOS(new Base(45,50),objects);
-		//visible3 = addLOS(new Base(0,-30),objects);
-		//visible4 = addLOS(new Base(-69,0),objects);
+		visible  = addLOS(new Base(90,0),objects);
+		visible2 = addLOS(new Base(45,50),objects);
+		visible3 = addLOS(new Base(0,-30),objects);
+		visible4 = addLOS(new Base(-69,0),objects);
 		visible5 = addLOS(new Base((rotations%180 - 90),230),objects);
 		
 		if(visible < lowestVis1) {
@@ -346,20 +346,22 @@ public class APS {
 		xyz base = new xyz(shiftedxyz.x * 3391010,shiftedxyz.y * 3391010,shiftedxyz.z * 3391010);
 		xyz drawbase = new xyz(
 				(scale(oBcur.getPos()[0], rad, 0) + rad/2 + shiftedxyz.x * rad/2),
-				shiftedxyz.y,
+				shiftedxyz.y + oBcur.getPos()[1],
 				(scale(oBcur.getPos()[2], rad, 2) + rad/2 + shiftedxyz.z * rad/2));
 		int visible = 0;
+		double myPos = oBcur.getPos()[1];
+		//System.out.println(base.y - oBcur.getPos()[1]);
 		for(int i = 0;i < oBs.size();i++) {
 			if(!oBs.get(i).isSat() || losBlocked(base, oBs.get(i))) {
 				//objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.BLACK));
 			} else{
-				if(base.y > oBcur.getPos()[1] - 10) {
+				if(drawbase.y > myPos) {
 					objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.WHITE));
 				}
 				visible++;
 			}
 		}
-		if(base.y > oBcur.getPos()[1] - 10) {
+		if(drawbase.y > myPos) {
 			objects.add(new drawable(
 					(int)drawbase.x - 5,
 					(int)drawbase.y + 10,
