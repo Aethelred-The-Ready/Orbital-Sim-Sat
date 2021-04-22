@@ -144,7 +144,6 @@ public class APS {
 			}
 			if( curTime.sec < timeCon) {
 				if(curTime.hour == 0 && curTime.min == 0) {
-					System.out.println(oBs.get(0).getPos()[1]);
 					rotations++;
 				}
 				calcLOS();
