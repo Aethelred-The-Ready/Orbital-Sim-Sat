@@ -159,4 +159,8 @@ public class OrbitalBody {
 			return (int) (a.pos[1]-b.pos[1]);
 		}
 	};
+
+	public xyz getXYZ() {
+		return new xyz((APS.scale(pos[0], radius, 0)) + radius / 2, pos[1], (APS.scale(pos[2], radius, 2) + radius / 2));
+	}
 }

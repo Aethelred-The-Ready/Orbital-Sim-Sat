@@ -19,7 +19,7 @@ public class APS {
 	
 	static JPanel j;
 	static ArrayList<OrbitalBody> oBs = new ArrayList<OrbitalBody>();
-	final static double timeCon = 0.001;
+	final static double timeCon = 1;
 	static double realSpeed = 0;
 	static double prevMill = 0;
 	static Time prevTime = new Time(2000, 1, 1, 12, 0, 0);
@@ -214,6 +214,11 @@ public class APS {
 						}
 					}
 				}
+				
+				int visible = addLOS(new xyz(0,0,-1.00001), objects);
+				int visible2 = addLOS(new xyz(1.00001,0,0), objects);
+				int visible3 = addLOS(new xyz(1.00001 * Math.sin(Math.PI/4),0,-1.00001 * Math.cos(Math.PI/4)), objects);
+				
 				for(int i = 0;i < oBs.size();i++) {
 					oBcur = oBs.get(i);
 					rad = (int) oBcur.getRad();
@@ -240,9 +245,10 @@ public class APS {
 				p.drawString(curTime.toString(), 10, 30);
 				p.drawString("Speed: " + Math.round(realSpeed*100)/100.0, 10, 50);
 				p.drawString("Speed Factor: " + speed, 10, 70);
-				p.drawString("Line of Sight: " + (losBlocked(new xyz(0,0,3391000), oBs.get(1)) ? "Blocked" : "Clear"), 10, 90);
+				p.drawString("Visible Sats N: " + visible, 10, 90);
+				p.drawString("Visible Sats NE: " + visible3, 10, 110);
+				p.drawString("Visible Sats E: " + visible2, 10, 130);
 				rad = 0;
-				p.drawLine(xV + 250, yV, scale(oBs.get(1).getPos()[0], rad, 0), scale(oBs.get(1).getPos()[2], rad, 2));
 
 			}
 		};
@@ -257,22 +263,60 @@ public class APS {
 	
 	
 
-	private static int scale(double d, double r, int axis) {
+	private static int addLOS(xyz xyz, ArrayList<drawable> objects) {
+
+		OrbitalBody oBcur = oBs.get(0);
+		int rad = (int) oBcur.getRad();
+		xyz base = new xyz(xyz.x * 3391010,xyz.y * 3391010,xyz.z * 3391010);
+		xyz drawbase = new xyz(
+				(scale(oBcur.getPos()[0], rad, 0) + rad/2 + xyz.x * rad/2),
+				0,
+				(scale(oBcur.getPos()[2], rad, 2) + rad/2 + xyz.z * rad/2));
+		int visible = 0;
+		for(int i = 1;i < oBs.size();i++) {
+			if(losBlocked(base, oBs.get(i))) {
+				//objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.BLACK));
+			} else {
+				visible++;
+				objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.WHITE));
+			}
+		}
+		
+		return visible;
+	}
+
+
+
+	static int scale(double d, double r, int axis) {
 		if(axis == 0) {
 			return (int) (d*0.0001428d/1.44 + xV - r/2);	
 		}
 		return (int) (d*0.0001428d/1.44 + yV - r/2);
 	}
 	
-	private static boolean losBlocked(xyz pos, OrbitalBody sat) {
-		Vector3D u = new Vector3D(sat.getPos()[0] - pos.x, sat.getPos()[1] - pos.y, sat.getPos()[2] - pos.z, true);
-		Vector3D o = new Vector3D(sat.getPos()[0], sat.getPos()[1], sat.getPos()[2]);
-		Vector3D c = new Vector3D(0,0,0);
-		double d = 4*(Math.pow(Vector3D.dot(u, Vector3D.sub(o, c)), 2) - (Math.pow(Vector3D.sub(o, c).norm(), 2) - Math.pow(3390000, 2)));
+	private static boolean losBlocked(xyz p1, OrbitalBody sat) {
+		xyz p2 = new xyz(sat.getPos()[0], sat.getPos()[1], sat.getPos()[2]);
+		double r = 3391000;
+	    double a,b,c;
+	    double bb4ac;
+	    xyz dp = new xyz(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
 
-		double t =  ((-2*Vector3D.dot(u, Vector3D.sub(o, c))) - Math.sqrt(d))/(2 * Vector3D.dot(u,u));
-		
-		return t >= 0;
+	    a = dp.x * dp.x + dp.y * dp.y + dp.z * dp.z;
+	    b = 2 * (dp.x * (p1.x) + dp.y * (p1.y) + dp.z * (p1.z));
+	    c = p1.x * p1.x + p1.y * p1.y + p1.z * p1.z - r * r;
+	    bb4ac = b * b - 4 * a * c;
+	    
+	    if(bb4ac > 0) {
+		    double i1 = (-b + Math.sqrt(bb4ac))/(2 * a);
+		    double i2 = (-b - Math.sqrt(bb4ac))/(2 * a);
+		    
+		    return (i1 < 1 && i1 > 0) || (i2 < 1 && i2 > 0);
+	    }
+	    
+	    
+	    
+	    return false;
+
 	}
 	
 }

@@ -1,17 +1,17 @@
 
-public class Vector3D {
+public class Vector {
 	
 	public double x = 0;
 	public double y = 0;
 	public double z = 0;
 	
-	public Vector3D(double a, double b, double c) {
+	public Vector(double a, double b, double c) {
 		x = a;
 		y = b;
 		z = c;
 	}
 	
-	public Vector3D(double x, double y, double z, boolean normalize) {
+	public Vector(double x, double y, double z, boolean normalize) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -21,8 +21,8 @@ public class Vector3D {
 		this.z = z/temp;
 	}
 	
-	public static Vector3D cross(Vector3D a, Vector3D b) {
-		Vector3D tr = new Vector3D(0,0,0);
+	public static Vector cross(Vector a, Vector b) {
+		Vector tr = new Vector(0,0,0);
 		
 		tr.x = a.y * b.z - a.z * b.y;
 		tr.y = a.z * b.x - a.x * b.z;
@@ -31,7 +31,7 @@ public class Vector3D {
 		return tr;
 	}
 	
-	public static double dot(Vector3D a, Vector3D b) {
+	public static double dot(Vector a, Vector b) {
 		double tr = 0;
 		
 		tr += a.x * b.x;
@@ -41,8 +41,8 @@ public class Vector3D {
 		return tr;
 	}
 	
-	public static Vector3D add(Vector3D a, Vector3D b) {
-		Vector3D tr = new Vector3D(0,0,0);
+	public static Vector add(Vector a, Vector b) {
+		Vector tr = new Vector(0,0,0);
 		
 		tr.x = a.x + b.x;
 		tr.y = a.y + b.y;
@@ -51,8 +51,8 @@ public class Vector3D {
 		return tr;
 	}
 	
-	public static Vector3D sub(Vector3D a, Vector3D b) {
-		Vector3D tr = new Vector3D(0,0,0);
+	public static Vector sub(Vector a, Vector b) {
+		Vector tr = new Vector(0,0,0);
 		
 		tr.x = a.x - b.x;
 		tr.y = a.y - b.y;
@@ -65,8 +65,8 @@ public class Vector3D {
 		return Math.sqrt(x*x + y*y + z*z);
 	}
 	
-	public static Vector3D sdot(double a, Vector3D b) {
-		Vector3D tr = new Vector3D(0,0,0);
+	public static Vector sdot(double a, Vector b) {
+		Vector tr = new Vector(0,0,0);
 		
 		tr.x = a * b.x;
 		tr.y = a * b.y;
@@ -77,6 +77,10 @@ public class Vector3D {
 	
 	public String toString() {
 		return "x: " + x + ", y: " + y + ", z: " + z;
+	}
+
+	public Object subtract(Vector c) {
+		return null;
 	}
 	
 	
