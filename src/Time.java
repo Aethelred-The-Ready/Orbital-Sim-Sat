@@ -31,6 +31,8 @@ public class Time {
 		if(sec >= 60) {
 			min++;
 			sec = 0;
+		} else {
+			return;
 		}
 		if(min == 60) {
 			hour++;

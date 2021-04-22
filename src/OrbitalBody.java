@@ -12,10 +12,12 @@ public class OrbitalBody {
 	private double[] vel = new double[3];//velocity in m/s
 	private double spin;//spin in hours per rotation
 	private double curRot = 0;//Current rotation
+	private double J2; // Second dynamic form factor
 	private Color col;
 	private String name;
+	private boolean isSat = false;
 	
-	public OrbitalBody(String n, double m, double r, double x, double y, double z, double vx, double vy, double vz, double sp, Color c) {
+	public OrbitalBody(String n, double m, double r, double x, double y, double z, double vx, double vy, double vz, double sp, Color c, double J2) {
 		GM = m;
 		radius = r;
 		pos[0] = x;
@@ -27,6 +29,8 @@ public class OrbitalBody {
 		spin = sp * 3600;
 		col = c;
 		name = n;
+		isSat = name.charAt(0) == 'S' && name.charAt(1) == 'a';
+		this.J2 = J2;
 	}
 	
 	/**
@@ -70,14 +74,15 @@ public class OrbitalBody {
 		oV[1] = (Math.sqrt(parent.GM * a)/a) * Math.cos(Math.toRadians(Mt));
 		oV[2] = 0;
 		
-		pos[0] = o[0]*(c(arg)*c(lon) - s(arg)*c(inc)*s(lon)) - o[1]*(s(arg)*c(lon) - c(arg)*c(inc)*s(lon));
-		pos[1] = o[0]*(c(arg)*s(lon) - s(arg)*c(inc)*c(lon)) - o[1]*(c(arg)*c(inc)*c(lon) - s(arg)*s(lon));
-		pos[2] = o[0]*(s(arg)*s(inc)) - o[1]*(c(arg)*s(inc));
+		pos[0] = parent.pos[0] + o[0]*(c(arg)*c(lon) - s(arg)*c(inc)*s(lon)) - o[1]*(s(arg)*c(lon) - c(arg)*c(inc)*s(lon));
+		pos[1] = parent.pos[1] + o[0]*(c(arg)*s(lon) - s(arg)*c(inc)*c(lon)) - o[1]*(c(arg)*c(inc)*c(lon) - s(arg)*s(lon));
+		pos[2] = parent.pos[2] + o[0]*(s(arg)*s(inc)) - o[1]*(c(arg)*s(inc));
 		
 
-		vel[0] = oV[0]*(c(arg)*c(lon) - s(arg)*c(inc)*s(lon)) - oV[1]*(s(arg)*c(lon) - c(arg)*c(inc)*s(lon));
-		vel[1] = oV[0]*(c(arg)*s(lon) - s(arg)*c(inc)*c(lon)) - oV[1]*(c(arg)*c(inc)*c(lon) - s(arg)*s(lon));
-		vel[2] = oV[0]*(s(arg)*s(inc)) - oV[1]*(c(arg)*s(inc));
+		vel[0] = parent.vel[0] + oV[0]*(c(arg)*c(lon) - s(arg)*c(inc)*s(lon)) - oV[1]*(s(arg)*c(lon) - c(arg)*c(inc)*s(lon));
+		vel[1] = parent.vel[1] + oV[0]*(c(arg)*s(lon) - s(arg)*c(inc)*c(lon)) - oV[1]*(c(arg)*c(inc)*c(lon) - s(arg)*s(lon));
+		vel[2] = parent.vel[2] + oV[0]*(s(arg)*s(inc)) - oV[1]*(c(arg)*s(inc));
+		isSat = name.charAt(0) == 'S' && name.charAt(1) == 'a';
 		
 	}
 	
@@ -152,6 +157,10 @@ public class OrbitalBody {
 		return name + " " + GM + " " + radius + " " + pos[0] + " " + pos[1] + " " + pos[2] + " " + vel[0] + " " + vel[1] + " " + vel[2] + " " + col.getRed() + " " + col.getGreen() + " " + col.getBlue();
 	}
 	
+	public boolean isSat() {
+		return isSat;
+	}
+	
 	
 	
 	public static Comparator<OrbitalBody> ySort = new Comparator<OrbitalBody>() {
@@ -162,5 +171,9 @@ public class OrbitalBody {
 
 	public xyz getXYZ() {
 		return new xyz((APS.scale(pos[0], radius, 0)) + radius / 2, pos[1], (APS.scale(pos[2], radius, 2) + radius / 2));
+	}
+
+	public double getJ2() {
+		return J2;
 	}
 }
