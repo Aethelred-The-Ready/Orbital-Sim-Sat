@@ -19,12 +19,15 @@ public class APS {
 	
 	static JPanel j;
 	static ArrayList<OrbitalBody> oBs = new ArrayList<OrbitalBody>();
+	static ArrayList<Sat> sats = new ArrayList<Sat>();
+	static ArrayList<Base> bases = new ArrayList<Base>();
 	final static double timeCon = 0.5;
 	static double realSpeed = 0;
 	static double prevMill = 0;
 	static Time prevTime = new Time(2000, 1, 1, 12, 0, 0);
-	static boolean paused = false;
-	static double scale = 0.0000001;
+	static boolean paused = true;
+	static double posScale = 0.0001d;
+	static double radScale = 13.288;
 	static long count = 0;
 	static int xV = 950;
 	static int yV = 550;
@@ -43,7 +46,7 @@ public class APS {
 	static int minVisLat = -90;
 	static Time curTime = new Time(2000, 1, 1, 12, 0, 1);
 	static LinkedList<xyz>[] trails;
-	static boolean leaveTrails = true;
+	static boolean leaveTrails = false;
 	static Runnable r = new Runnable() {
 
 		public void run() {
@@ -81,6 +84,17 @@ public class APS {
 				paused = !paused;
 			}else if(e.getKeyCode() == KeyEvent.VK_C) {
 				clearTrails();
+			}
+			else if(e.getKeyCode() == KeyEvent.VK_R) {
+				yV = (int) (((yV - 500) * 0.5) + 500);
+				xV = (int) (((xV - 500) * 0.5) + 500);
+				radScale -= 1;
+				posScale *= 0.5;
+			}else if(e.getKeyCode() == KeyEvent.VK_F) {
+				yV = (int) (((yV - 500) * 2) + 500);
+				xV = (int) (((xV - 500) * 2) + 500);
+				radScale += 1;
+				posScale *= 2;
 			}else if(e.getKeyCode() == KeyEvent.VK_V) {
 				clearTrails();
 				leaveTrails = !leaveTrails;
@@ -109,14 +123,21 @@ public class APS {
 	
 	public static void main(String[] args) {
 		
-		oBs.add(new OrbitalBody("Mars", 4.282837E13,3389500,0,0,0,0,0,0,24.7,new Color(183, 65, 14), 0.0196045));
-		oBs.add(new OrbitalBody("Phobos", 716000,26,9378000,0,0,0,2138,40,5,new Color(127, 127, 127), 0.3));
-		oBs.add(new OrbitalBody("Deimos", 98000,15.6,0,23459000,0,-1351.3,0,-42,5,new Color(127, 127, 127), 0.5));
+		OrbitalBody Mars = new OrbitalBody("Mars", 4.282837E13,3389500,0,0,0,0,0,0,24.7,new Color(183, 65, 14));
+		oBs.add(Mars);
+		oBs.add(new OrbitalBody("Phobos", 716000,26,9378000,0,0,0,2138,40,5,new Color(127, 127, 127)));
+		oBs.add(new OrbitalBody("Deimos", 98000,15.6,0,23459000,0,-1351.3,0,-42,5,new Color(127, 127, 127)));
+		
+		bases.add(new Base(90, 0, Mars));
+		bases.add(new Base(45, 50, Mars));
+		bases.add(new Base(0, -30, Mars));
+		bases.add(new Base((-90), 180, Mars));
+		bases.add(new Base((- 90), 0, Mars));
 		
 		for(int k = 0;k < planes;k++) {
 			for(int i = 0; i < satPerPlane;i++) {
-				oBs.add(new OrbitalBody("Sat" + i, 1, 10, oBs.get(0),
-						0, oBs.get(0).getRad() + orbitHeight,
+				sats.add(new Sat("Sat" + i, 1, 10, oBs.get(0),
+						0.00, oBs.get(0).getRad() + orbitHeight,
 						orbitInc, k*(360/planes) + 10,
 						0, planeDiv*i + (planeDiv/planes) * k,
 						new Color(255, 0, 255)));
@@ -124,9 +145,9 @@ public class APS {
 		}
 		
 		
-		trails = new LinkedList[oBs.size()];
+		trails = new LinkedList[oBs.size() + sats.size()];
 		
-		for(int i = 0;i < oBs.size();i++) {
+		for(int i = 0;i < oBs.size() + sats.size();i++) {
 			trails[i] = new LinkedList<xyz>();
 		}
 		
@@ -136,6 +157,7 @@ public class APS {
 		while(true) {
 			if(!paused) {
 				runner();
+				
 			}
 			if(speed != 0) {
 				for(int i = 0;i < speed;i++) {
@@ -145,6 +167,8 @@ public class APS {
 			if( curTime.sec < timeCon) {
 				if(curTime.hour == 0 && curTime.min == 0) {
 					rotations++;
+					bases.get(3).move((rotations%180 - 90),180);
+					bases.get(4).move((rotations%180 - 90),0);
 				}
 				calcLOS();
 			}
@@ -163,11 +187,17 @@ public class APS {
 	private static void runner() {
 		for(int i = 0; i < oBs.size(); i++) {
 			for(int k = 0;k < oBs.size();k++) {
-				if(i != k && !oBs.get(k).isSat()) {
+				if(i != k) {
 					oBs.get(i).applyAcc(grav(oBs.get(i), oBs.get(k)), timeCon);
 				}
 			}
 			oBs.get(i).tickVel(timeCon);
+		}
+		for(int i = 0; i < sats.size(); i++) {
+			for(int k = 0;k < oBs.size();k++) {
+				sats.get(i).applyAcc(grav(sats.get(i), oBs.get(k)), timeCon);
+			}
+			sats.get(i).tickVel(timeCon);
 		}
 		curTime.tick(timeCon);
 	}
@@ -197,25 +227,27 @@ public class APS {
 	
 	private static void calcLOS() {
 		ArrayList<drawable> objects = new ArrayList<drawable>();
-		visible  = addLOS(new Base(90,0),objects);
-		visible2 = addLOS(new Base(45,50),objects);
-		visible3 = addLOS(new Base(0,-30),objects);
-		visible4 = addLOS(new Base(-69,0),objects);
-		visible5 = addLOS(new Base((rotations%180 - 90),230),objects);
+		visible  = bases.get(0).addLOS(objects, sats, oBs);
+		visible2 = bases.get(1).addLOS(objects, sats, oBs);
+		visible3 = bases.get(2).addLOS(objects, sats, oBs);
+		visible4 = bases.get(3).addLOS(objects, sats, oBs);
+		visible5 = bases.get(4).addLOS(objects, sats, oBs);
 		
-		if(visible < lowestVis1) {
+		
+		
+		if(visible <= lowestVis1) {
 			lowestVis1 = visible;
 		}
-		if(visible2 < lowestVis2) {
+		if(visible2 <= lowestVis2) {
 			lowestVis2 = visible2;
 		}
-		if(visible3 < lowestVis3) {
+		if(visible3 <= lowestVis3) {
 			lowestVis3 = visible3;
 		}
-		if(visible4 < lowestVis4) {
+		if(visible4 <= lowestVis4) {
 			lowestVis4 = visible4;
 		}
-		if(visible5 < lowestVis5) {
+		if(visible5 <= lowestVis5) {
 			lowestVis5 = visible5;
 			minVisLat = (rotations%180 - 90);
 		}
@@ -243,49 +275,16 @@ public class APS {
 				p.setColor(Color.WHITE);
 
 				for(int i = 0;i < oBs.size();i++) {
-					oBcur = oBs.get(i);
-					p.setColor(oBcur.getCol());
-					if(oBcur.isSat()) {
-						rad = (int) oBcur.getRad();
-						x = (int) (scale(oBcur.getPos()[0], rad, 0));
-						y = (int) (scale(oBcur.getPos()[2], rad, 2));
-					}else {
-						rad = scaleRad(oBcur.getRad());
-						x = scaleOb(oBcur.getPos()[0], rad, 0);
-						y = scaleOb(oBcur.getPos()[2], rad, 2);
-					}
-					if(leaveTrails) {
-						trails[i].addFirst(new xyz(x + rad/2,oBcur.getPos()[1],y + rad/2));
-					}
-
-					if(count > (1000/satPerPlane)) {
-						trails[i].removeLast();
-					}
-					ListIterator<xyz> li = trails[i].listIterator(0);
-					
-					objects.add(new drawable(
-							x,
-							(int) (oBcur.getPos()[1]),
-							y,
-							rad,
-							oBcur.getCol()
-							));
-					
-					while(li.hasNext()) {
-						xyz tra = li.next();
-						if(li.hasNext()){
-							xyz next = li.next();
-							li.previous();
-							objects.add(new drawable(tra, next, oBcur.getCol()));
-						}
-					}
+					addOb(objects, oBs.get(i), i);
 				}
-				
-				//visible  = addLOS(new Base(90,0),objects);
-				//visible2 = addLOS(new Base(45,50),objects);
-				//visible3 = addLOS(new Base(0,-30),objects);
-				//visible4 = addLOS(new Base(-30,100),objects);
-				visible5 = addLOS(new Base((rotations%180 - 90),230),objects);
+				for(int i = 0;i < sats.size();i++) {
+					addOb(objects, sats.get(i), i + oBs.size());
+					sats.get(i).addLOS(objects, sats, oBs);
+				}
+								
+				for(int i = 0;i < bases.size();i++) {
+					bases.get(i).addLOS(objects, sats, oBs);
+				}
 				
 				Collections.sort(objects, drawable.ySort);
 				for(int i = 0;i < objects.size();i++) {
@@ -295,7 +294,6 @@ public class APS {
 					}else {
 						p.fillOval((int) (objects.get(i).pos.x), (int) (objects.get(i).pos.z), objects.get(i).rad, objects.get(i).rad);
 					}
-					
 				}
 			
 				p.setColor(Color.WHITE);
@@ -330,78 +328,46 @@ public class APS {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
+	private static void addOb(ArrayList<drawable> objects, OrbitalBody oBcur, int i) {
+		drawable td = oBcur.getDrawable();
+		objects.add(td);
+		if(leaveTrails) {
+			trails[i].addFirst(new xyz(td.pos.x + td.rad/2,oBcur.getPos()[1],td.pos.y + td.rad/2));
+		}
+
+		if(count > (1000/satPerPlane)) {
+			trails[i].removeLast();
+		}
+		ListIterator<xyz> li = trails[i].listIterator(0);
+		
+		while(li.hasNext()) {
+			xyz tra = li.next();
+			if(li.hasNext()){
+				xyz next = li.next();
+				li.previous();
+				objects.add(new drawable(tra, next, oBcur.getCol()));
+			}
+		}
+	}
+
+
+
 	private static void addStrings(String[] s, Graphics p) {
 		for(int i = 0;i < s.length;i++) {
 			p.drawString(s[i], 10, 30 + i * 20);
 		}
 	}
 
-	private static int addLOS(Base b, ArrayList<drawable> objects) {
-		OrbitalBody oBcur = oBs.get(0);
-		double h = Math.sqrt(b.pos.x * b.pos.x + b.pos.y * b.pos.y);
-		double baseRot = b.the;
-		xyz shiftedxyz = new xyz(h * Math.cos(oBcur.getCurRot() + baseRot), -h * Math.sin(oBcur.getCurRot() + baseRot), b.pos.z);
-		int rad = scaleRad(oBcur.getRad());
-		xyz base = new xyz(shiftedxyz.x * 3391010,shiftedxyz.y * 3391010,shiftedxyz.z * 3391010);
-		xyz drawbase = new xyz(
-				(scale(oBcur.getPos()[0], rad, 0) + rad/2 + shiftedxyz.x * rad/2),
-				shiftedxyz.y + oBcur.getPos()[1],
-				(scale(oBcur.getPos()[2], rad, 2) + rad/2 + shiftedxyz.z * rad/2));
-		int visible = 0;
-		double myPos = oBcur.getPos()[1];
-		//System.out.println(base.y - oBcur.getPos()[1]);
-		for(int i = 0;i < oBs.size();i++) {
-			if(!oBs.get(i).isSat() || losBlocked(base, oBs.get(i))) {
-				//objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.BLACK));
-			} else{
-				if(drawbase.y > myPos) {
-					objects.add(new drawable(drawbase, oBs.get(i).getXYZ(), Color.WHITE));
-				}
-				visible++;
-			}
-		}
-		if(drawbase.y > myPos) {
-			objects.add(new drawable(
-					(int)drawbase.x - 5,
-					(int)drawbase.y + 10,
-					(int)drawbase.z - 5,
-					10,
-					Color.GREEN));
-		}
-		
-		return visible;
-	}
-
-
 
 	static int scale(double d, double r, int axis) {
-		if(axis == 0) {
-			return (int) (d*0.0001428d/1.44 + xV - r/2);	
+		if(axis == 0) {//0.0001428d
+			return (int) (d*0.0001d/1.44 + xV - r/2);	
 		}
-		return (int) (d*0.0001428d/1.44 + yV - r/2);
-	}
-	
-	static int scaleOb(double d, double r, int axis) {
-		if(axis == 0) {
-			return (int) (d*0.0001428d/1.44 + xV - r/2);	
-		}
-		return (int) (d*0.0001428d/1.44 + yV - r/2);
+		return (int) (d*0.0001d/1.44 + yV - r/2);
 	}
 	
 	static int scaleRad(double r) {
-		return (int) (r/6779);
-	}
-	
-	private static boolean losBlocked(xyz p1, OrbitalBody sat) {
-		xyz p2 = new xyz(sat.getPos()[0], sat.getPos()[1], sat.getPos()[2]);
-		for(int i = 0;i < oBs.size();i++) {
-			if(!oBs.get(i).isSat()) {
-				if(losBlocked(p1, p2, oBs.get(i))) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return (int) (r/10000);
 	}
 	
 	private static boolean losBlocked(xyz p1, xyz p2, OrbitalBody s) {

@@ -8,10 +8,8 @@ public class drawable {
 	Color c;
 	Boolean line;
 	
-	public drawable(int x, int y, int z, int rad, Color c) {
-		this.pos.x = x;
-		this.pos.y = y;
-		this.pos.z = z;
+	public drawable(double x, double y, double z, int rad, Color c) {
+		this.pos = new xyz(x, y, z);
 		this.rad = rad;
 		this.c = c;
 		this.line = false;
