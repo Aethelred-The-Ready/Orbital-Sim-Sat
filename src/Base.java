@@ -57,7 +57,7 @@ public class Base {
 		xyz base = getCurXYZ();
 		for(int i = 0;i < sats.size();i++) {
 			if(sats.get(i).hasLOS(base, oBs)) {
-				objects.add(new drawable(drawbase, sats.get(i).getXYZ(), Color.WHITE));
+				objects.add(new drawable(drawbase, sats.get(i).getLOSXYZ(), Color.WHITE));
 				visible++;
 			}
 		}

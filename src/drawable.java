@@ -22,9 +22,16 @@ public class drawable {
 		this.line = true;
 	}
 	
+	private double getMinY() {
+		if(line && pos.y > posb.y) {
+			return posb.y;
+		}
+		return pos.y;
+	}
+	
 	public static Comparator<drawable> ySort = new Comparator<drawable>() {
 		public int compare(drawable a, drawable b) {
-			return (int) (a.pos.y-b.pos.y);
+			return (int) (a.getMinY()-b.getMinY());
 		}
 	};
 }

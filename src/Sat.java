@@ -28,6 +28,30 @@ public class Sat extends OrbitalBody {
 				);
 	}
 	
+	public void tick() {
+		
+	}
+	
+	public xyz getLOSXYZ() {
+		xyz tr = getXYZ();
+		tr.y -= 5;
+		return tr;
+	}
+
+	public void addLOS(ArrayList<drawable> objects, ArrayList<Sat> sats, ArrayList<OrbitalBody> oBs) {
+		int visible = 0;
+		xyz drawbase = getLOSXYZ();
+		for(int i = 0;i < sats.size();i++) {
+			Sat oth = sats.get(i);
+			xyz temp = new xyz(oth.pos[0], oth.pos[1], oth.pos[2]);
+			if(oth != this && this.hasLOS(temp, oBs)) {
+				objects.add(new drawable(drawbase, oth.getLOSXYZ(), Color.WHITE));
+				visible++;
+			}
+		}
+		visibleSats = visible;
+	}
+	
 	//Do I have a los to this position
 	public boolean hasLOS(xyz p1, final ArrayList<OrbitalBody> oBs) {
 		xyz p2 = new xyz(pos[0], pos[1], pos[2]);
@@ -63,31 +87,6 @@ public class Sat extends OrbitalBody {
 	    }
 	    
 	    return false;
-	}
-	
-	public void tick() {
-		
-	}
-	
-	private xyz getLOSXYZ() {
-		xyz tr = getXYZ();
-		tr.y -= 5;
-		tr.x += 5;
-		tr.z -= 5;
-		return tr;
-	}
-
-	public void addLOS(ArrayList<drawable> objects, ArrayList<Sat> sats, ArrayList<OrbitalBody> oBs) {
-		int visible = 0;
-		xyz drawbase = new xyz(APS.scale(pos[0], this.radius, 0), pos[1] - 5, APS.scale(pos[2], this.radius, 2));
-		xyz base = getXYZ();
-		for(int i = 0;i < sats.size();i++) {
-			if(sats.get(i).pos[0] != pos[0] && sats.get(i).hasLOS(base, oBs)) {
-				objects.add(new drawable(drawbase, sats.get(i).getLOSXYZ(), Color.WHITE));
-				visible++;
-			}
-		}
-		visibleSats = visible;
 	}
 	
 }

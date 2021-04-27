@@ -1,6 +1,6 @@
 import java.awt.Color;
 import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.UUID;
 
 
 public class OrbitalBody {
@@ -15,6 +15,7 @@ public class OrbitalBody {
 	protected Color col;
 	protected String name;
 	protected boolean isSat = false;
+	public UUID id = UUID.randomUUID();
 	
 	public OrbitalBody(String n, double m, double r, double x, double y, double z, double vx, double vy, double vz, double sp, Color c) {
 		GM = m;
@@ -201,5 +202,9 @@ public class OrbitalBody {
 	// Used to do stuff
 	public void tick() {
 		
+	}
+	
+	public boolean equals(OrbitalBody b) {
+		return this.id == b.id;
 	}
 }

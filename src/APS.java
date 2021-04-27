@@ -26,7 +26,7 @@ public class APS {
 	static double prevMill = 0;
 	static Time prevTime = new Time(2000, 1, 1, 12, 0, 0);
 	static boolean paused = true;
-	static double posScale = 0.0001d;
+	static double posScale = 0.000069444444d;
 	static double radScale = 13.288;
 	static long count = 0;
 	static int xV = 950;
@@ -361,13 +361,13 @@ public class APS {
 
 	static int scale(double d, double r, int axis) {
 		if(axis == 0) {//0.0001428d
-			return (int) (d*0.0001d/1.44 + xV - r/2);	
+			return (int) (d*posScale + xV - r/2);	
 		}
-		return (int) (d*0.0001d/1.44 + yV - r/2);
+		return (int) (d*posScale + yV - r/2);
 	}
 	
 	static int scaleRad(double r) {
-		return (int) (r/10000);
+		return (int) (r*2*posScale);
 	}
 	
 	private static boolean losBlocked(xyz p1, xyz p2, OrbitalBody s) {
